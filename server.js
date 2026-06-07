@@ -10,6 +10,10 @@ app.post("/analyze", async (req, res) => {
 
   const stockfish = spawn("stockfish");
 
+stockfish.on("error", (err) => {
+  console.error("Stockfish error:", err);
+});
+
   let output = "";
 
   stockfish.stdout.on("data", (data) => {
