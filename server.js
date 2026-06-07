@@ -8,7 +8,7 @@ app.use(express.json({ limit: "5mb" }));
 app.post("/analyze", async (req, res) => {
   const fen = req.body.fen;
 
-  const stockfish = spawn("./stockfish");
+  const stockfish = spawn("stockfish");
 
   let output = "";
 
