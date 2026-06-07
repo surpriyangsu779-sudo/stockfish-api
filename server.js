@@ -14,17 +14,11 @@ app.get("/", (req, res) => {
 
 // Check if Stockfish exists
 app.get("/stockfish-check", (req, res) => {
-  exec("which stockfish", (error, stdout, stderr) => {
-    if (error) {
-      return res.json({
-        error: error.message,
-        stdout,
-        stderr
-      });
-    }
-
+  exec("find / -type f -name '*stockfish*' 2>/dev/null", (error, stdout, stderr) => {
     res.json({
-      stockfish_path: stdout.trim()
+      error: error ? error.message : null,
+      result: stdout,
+      stderr
     });
   });
 });
