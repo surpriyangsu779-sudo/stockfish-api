@@ -8,8 +8,7 @@ app.use(express.json({ limit: "5mb" }));
 app.post("/analyze", async (req, res) => {
   const fen = req.body.fen;
 
-  const stockfish = spawn("stockfish");
-
+const stockfish = spawn("/usr/games/stockfish");
 stockfish.on("error", (err) => {
   console.error("Stockfish error:", err);
 });
