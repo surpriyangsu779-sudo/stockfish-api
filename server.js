@@ -76,7 +76,16 @@ app.post("/analyze", (req, res) => {
     });
   }, 3000);
 });
+app.get("/debug", (req, res) => {
+  const fs = require("fs");
 
+  res.json({
+    cwd: process.cwd(),
+    dockerfileExists: fs.existsSync("./Dockerfile"),
+    nodeVersion: process.version,
+    platform: process.platform
+  });
+});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
