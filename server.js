@@ -1,29 +1,19 @@
 const express = require("express");
-const { spawn, exec } = require("child_process");
+const { spawn } = require("child_process");
 
 const app = express();
 
 app.use(express.json({ limit: "5mb" }));
 
-// Health check
+// Health Check
 app.get("/", (req, res) => {
   res.json({
-    status: "working"
+    status: "working",
+    message: "Stockfish API is running"
   });
 });
 
-// Check if Stockfish exists
-app.get("/stockfish-check", (req, res) => {
-  exec("find / -type f -name '*stockfish*' 2>/dev/null", (error, stdout, stderr) => {
-    res.json({
-      error: error ? error.message : null,
-      result: stdout,
-      stderr
-    });
-  });
-});
-
-// Analyze position
+// Analyze Chess Position
 app.post("/analyze", (req, res) => {
   const fen = req.body.fen;
 
@@ -33,7 +23,8 @@ app.post("/analyze", (req, res) => {
     });
   }
 
-  const stockfish = spawn("stockfish");
+  // IMPORTANT: Use full Stockfish path found on Railway
+  const stockfish = spawn("/usr/games/stockfish");
 
   let output = "";
 
@@ -60,26 +51,20 @@ app.post("/analyze", (req, res) => {
   setTimeout(() => {
     stockfish.stdin.write("quit\n");
 
-    const bestMoveLine = output
-      .split("\n")
-      .find((line) => line.includes("bestmove"));
+    const lines = output.split("\n");
+
+    const bestMoveLine = lines.find((line) =>
+      line.includes("bestmove")
+    );
 
     res.json({
       fen,
-      result: bestMoveLine || output
+      bestMove: bestMoveLine || "No move found",
+      rawOutput: output
     });
   }, 3000);
 });
-app.get("/debug", (req, res) => {
-  const fs = require("fs");
 
-  res.json({
-    cwd: process.cwd(),
-    dockerfileExists: fs.existsSync("./Dockerfile"),
-    nodeVersion: process.version,
-    platform: process.platform
-  });
-});
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
