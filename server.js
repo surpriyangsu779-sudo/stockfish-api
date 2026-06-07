@@ -48,22 +48,24 @@ app.post("/analyze", (req, res) => {
   stockfish.stdin.write(`position fen ${fen}\n`);
   stockfish.stdin.write("go depth 15\n");
 
-  setTimeout(() => {
-    stockfish.stdin.write("quit\n");
+setTimeout(() => {
+  stockfish.stdin.write("quit\n");
 
-    const lines = output.split("\n");
+  const lines = output.split("\n");
 
-    const bestMoveLine = lines.find((line) =>
-      line.includes("bestmove")
-    );
+  const bestMoveLine = lines.find(line =>
+    line.startsWith("bestmove")
+  );
 
-    res.json({
-      fen,
-      bestMove: bestMoveLine || "No move found",
-      rawOutput: output
-    });
-  }, 3000);
-});
+  const bestMove = bestMoveLine
+    ? bestMoveLine.split(" ")[1]
+    : null;
+
+  res.json({
+    fen,
+    bestMove
+  });
+}, 3000);
 
 const PORT = process.env.PORT || 3000;
 
