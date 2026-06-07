@@ -41,4 +41,24 @@ stockfish.on("error", (err) => {
 app.get("/test", (req, res) => {
   res.json({ status: "working" });
 });
+app.get("/analyze-test", async (req, res) => {
+  const stockfish = spawn("stockfish");
+
+  let output = "";
+
+  stockfish.stdout.on("data", (data) => {
+    output += data.toString();
+  });
+
+  stockfish.stdin.write("uci\n");
+  stockfish.stdin.write(
+    "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1\n"
+  );
+  stockfish.stdin.write("go depth 10\n");
+
+  setTimeout(() => {
+    stockfish.stdin.write("quit\n");
+    res.send(output);
+  }, 3000);
+});
 app.listen(process.env.PORT || 3000);
