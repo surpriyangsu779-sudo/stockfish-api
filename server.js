@@ -23,7 +23,6 @@ app.post("/analyze", (req, res) => {
     });
   }
 
-  // IMPORTANT: Use full Stockfish path found on Railway
   const stockfish = spawn("/usr/games/stockfish");
 
   let output = "";
@@ -48,24 +47,27 @@ app.post("/analyze", (req, res) => {
   stockfish.stdin.write(`position fen ${fen}\n`);
   stockfish.stdin.write("go depth 15\n");
 
-setTimeout(() => {
-  stockfish.stdin.write("quit\n");
+  setTimeout(() => {
+    stockfish.stdin.write("quit\n");
 
-  const lines = output.split("\n");
+    const lines = output.split("\n");
 
-  const bestMoveLine = lines.find(line =>
-    line.startsWith("bestmove")
-  );
+    const bestMoveLine = lines.find(line =>
+      line.startsWith("bestmove")
+    );
 
-  const bestMove = bestMoveLine
-    ? bestMoveLine.split(" ")[1]
-    : null;
+    const bestMove = bestMoveLine
+      ? bestMoveLine.split(" ")[1]
+      : null;
 
-  res.json({
-    fen,
-    bestMove
-  });
-}, 3000);
+    res.json({
+      fen,
+      bestMove
+    });
+
+  }, 3000);
+
+}); // <-- THIS WAS MISSING
 
 const PORT = process.env.PORT || 3000;
 
