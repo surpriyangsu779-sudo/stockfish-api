@@ -34,5 +34,7 @@ app.post("/analyze", async (req, res) => {
     });
   }, 3000);
 });
-
+app.get("/", (req, res) => {
+  res.send("Stockfish API running");
+});
 app.listen(process.env.PORT || 3000);
