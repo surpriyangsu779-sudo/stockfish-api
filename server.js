@@ -1,21 +1,32 @@
 const express = require("express");
-const { spawn } = require("child_process");
+const { spawn, exec } = require("child_process");
 
 const app = express();
 
-app.use(express.json({ limit: "5mb" }));
+app.use(express.json());
 
-app.post("/analyze", async (req, res) => {
+app.get("/", (req, res) => {
+  res.json({ status: "working" });
+});
+
+app.get("/stockfish-check", (req, res) => {
+  exec("which stockfish", (err, stdout, stderr) => {
+    res.json({
+      error: err ? err.message : null,
+      stdout,
+      stderr
+    });
+  });
+});
+
+app.post("/analyze", (req, res) => {
   const fen = req.body.fen;
 
-const stockfish = spawn("/usr/games/stockfish");
-stockfish.on("error", (err) => {
-  console.error("Stockfish error:", err);
-});
+  const stockfish = spawn("/usr/games/stockfish");
 
   let output = "";
 
-  stockfish.stdout.on("data", (data) => {
+  stockfish.stdout.on("data", data => {
     output += data.toString();
   });
 
@@ -26,10 +37,9 @@ stockfish.on("error", (err) => {
   setTimeout(() => {
     stockfish.stdin.write("quit\n");
 
-    const lines = output.split("\n");
-    const bestMoveLine = lines.find(line =>
-      line.includes("bestmove")
-    );
+    const bestMoveLine = output
+      .split("\n")
+      .find(line => line.includes("bestmove"));
 
     res.json({
       fen,
@@ -37,27 +47,7 @@ stockfish.on("error", (err) => {
     });
   }, 3000);
 });
-app.get("/test", (req, res) => {
-  res.json({ status: "working" });
+
+app.listen(process.env.PORT || 3000, () => {
+  console.log("Server started");
 });
-app.get("/analyze-test", async (req, res) => {
-  const stockfish = spawn("stockfish");
-
-  let output = "";
-
-  stockfish.stdout.on("data", (data) => {
-    output += data.toString();
-  });
-
-  stockfish.stdin.write("uci\n");
-  stockfish.stdin.write(
-    "position fen rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1\n"
-  );
-  stockfish.stdin.write("go depth 10\n");
-
-  setTimeout(() => {
-    stockfish.stdin.write("quit\n");
-    res.send(output);
-  }, 3000);
-});
-app.listen(process.env.PORT || 3000);
