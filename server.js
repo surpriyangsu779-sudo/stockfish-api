@@ -47,7 +47,13 @@ app.post("/analyze", (req, res) => {
     });
   }, 3000);
 });
+app.get("/find-stockfish", (req, res) => {
+  const { exec } = require("child_process");
 
+  exec("find / -name '*stockfish*' 2>/dev/null", (err, stdout) => {
+    res.send(stdout);
+  });
+});
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server started");
 });
