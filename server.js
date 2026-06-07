@@ -3,31 +3,60 @@ const { spawn, exec } = require("child_process");
 
 const app = express();
 
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
+// Health check
 app.get("/", (req, res) => {
-  res.json({ status: "working" });
+  res.json({
+    status: "working"
+  });
 });
 
+// Check if Stockfish exists
 app.get("/stockfish-check", (req, res) => {
-  exec("which stockfish", (err, stdout, stderr) => {
+  exec("which stockfish", (error, stdout, stderr) => {
+    if (error) {
+      return res.json({
+        error: error.message,
+        stdout,
+        stderr
+      });
+    }
+
     res.json({
-      error: err ? err.message : null,
-      stdout,
-      stderr
+      stockfish_path: stdout.trim()
     });
   });
 });
 
+// Analyze position
 app.post("/analyze", (req, res) => {
   const fen = req.body.fen;
 
-  const stockfish = spawn("/usr/games/stockfish");
+  if (!fen) {
+    return res.status(400).json({
+      error: "FEN is required"
+    });
+  }
+
+  const stockfish = spawn("stockfish");
 
   let output = "";
 
-  stockfish.stdout.on("data", data => {
+  stockfish.stdout.on("data", (data) => {
     output += data.toString();
+  });
+
+  stockfish.stderr.on("data", (data) => {
+    console.error(data.toString());
+  });
+
+  stockfish.on("error", (err) => {
+    console.error(err);
+
+    return res.status(500).json({
+      error: err.message
+    });
   });
 
   stockfish.stdin.write("uci\n");
@@ -39,7 +68,7 @@ app.post("/analyze", (req, res) => {
 
     const bestMoveLine = output
       .split("\n")
-      .find(line => line.includes("bestmove"));
+      .find((line) => line.includes("bestmove"));
 
     res.json({
       fen,
@@ -47,13 +76,9 @@ app.post("/analyze", (req, res) => {
     });
   }, 3000);
 });
-app.get("/find-stockfish", (req, res) => {
-  const { exec } = require("child_process");
 
-  exec("find / -name '*stockfish*' 2>/dev/null", (err, stdout) => {
-    res.send(stdout);
-  });
-});
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server started");
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
