@@ -1,6 +1,6 @@
 const express = require("express");
 const { spawn } = require("child_process");
-
+const { Chess } = require("chess.js");
 const app = express();
 
 app.use(express.json({ limit: "5mb" }));
@@ -12,7 +12,20 @@ app.get("/", (req, res) => {
     message: "Stockfish API is running"
   });
 });
+// Test chess.js
+app.get("/test-chessjs", (req, res) => {
 
+  const chess = new Chess();
+
+  chess.move("e4");
+  chess.move("e5");
+
+  res.json({
+    status: "working",
+    fen: chess.fen()
+  });
+
+});
 // Analyze Chess Position
 app.post("/analyze", (req, res) => {
   const fen = req.body.fen;
